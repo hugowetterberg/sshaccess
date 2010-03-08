@@ -1,0 +1,14 @@
+name = "SSH Access"
+package = "SSH Keys"
+description = "Manages authorized_keys for remote server accounts"
+
+dependencies[] = "sshkey"
+dependencies[] = "features"
+dependencies[] = "text"
+
+features[content][] = "remote_account-field_account_name"
+features[content][] = "remote_account-field_server_address"
+features[node][] = "remote_account"
+
+core = "6.x"
+php = "5.x"

@@ -1,0 +1,10 @@
+name = "SSH Access Users"
+package = "SSH Keys"
+description = "User account level access"
+
+dependencies[] = "sshaccess"
+dependencies[] = "userreference"
+
+features[content][] = "remote_account-field_access_users"
+
+core = "6.x"

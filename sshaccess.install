@@ -1,0 +1,67 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function sshaccess_install() {
+  drupal_install_schema('sshaccess');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function sshaccess_uninstall() {
+  drupal_uninstall_schema('sshaccess');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function sshaccess_schema() {
+  $schema = array();
+
+  $schema['sshaccess'] = array(
+    'description' => 'Public key association for sshaccess',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The remote account associated with the public key.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'fingerprint' => array(
+        'description' => 'The md5 hash for the public key',
+        'type' => 'char',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('nid', 'fingerprint'),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'fingerprint' => array('fingerprint'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implementation of hook_requirements().
+ */
+function sshaccess_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  if ($phase=='runtime') {
+    if (!sshaccess_valid_configuration()) {
+      $requirements['sshaccess']['title'] = $t('SSH Access');
+      $requirements['sshaccess']['description'] = $t('SSH Access isn\'t properly configured. !admin', array(
+        '!admin' => l($t('Click here to configure SSH Access.'), 'admin/settings/sshaccess'),
+      ));
+      $requirements['sshaccess']['severity'] = REQUIREMENT_ERROR;
+    }
+  }
+
+  return $requirements;
+}

@@ -1,0 +1,82 @@
+<?php
+
+include_once('sshaccess.features.inc');
+
+function sshaccess_menu() {
+  $menu = array();
+
+  $menu['admin/settings/sshaccess'] = array(
+    'title' => 'SSH Access',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sshaccess_settings_form'),
+    'access arguments' => array('administer sshaccess'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'sshaccess.admin.inc',
+  );
+
+  return $menu;
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ **/
+function sshaccess_nodeapi(&$node, $op, $a3=Null, $page=Null) {
+  if ($node->type == 'remote_account') {
+    module_load_include('inc', 'sshaccess');
+
+    switch ($op) {
+      case 'validate':
+        if (!sshaccess_valid_configuration()) {
+          form_set_error('field_server_address', t('You cannot add remote accounts before SSH Access is properly configured. !admin', array(
+            '!admin' => l(t('Click here to configure SSH Access.'), 'admin/settings/sshaccess'),
+          )));
+        }
+        break;
+      case 'insert':
+        // Generate primary access key
+        $pubkey = sshaccess_generate_keypair($node->nid);
+        $key_record = sshkey_public_key_save(0, $pubkey, $node->field_server_address[0]['value']);
+
+        $record = array(
+          'nid' => $node->nid,
+          'fingerprint' => $key_record['fingerprint']
+        );
+        drupal_write_record('sshaccess', $record);
+
+        sshaccess_add_job($node->nid, 'add_keys', array(
+          'user' => $node->field_account_name[0]['value'],
+          'host' => $node->field_server_address[0]['value'],
+        ));
+        break;
+      case 'update':
+        sshaccess_update_authorized_keys($node, array(
+          'user' => $node->field_account_name[0]['value'],
+          'host' => $node->field_server_address[0]['value'],
+        ));
+        break;
+      case 'delete':
+        // Archive primary access key
+        sshaccess_add_job($node->nid, 'archive_keys');
+        db_query("DELETE FROM {sshaccess} WHERE nid = %d", array(
+          ':nid' => $node->nid,
+        ));
+        break;
+    }
+  }
+}
+
+/**
+ * Check if the configuration is valid.
+ *
+ * @return bool
+ *  Returns TRUE if the configuration is valid.
+ */
+function sshaccess_valid_configuration() {
+  $job_dir = variable_get('sshaccess_job_directory', '');
+  $ssh_keygen = variable_get('sshaccess_ssh_keygen_path', '');
+
+  $valid = !empty($job_dir) && is_writable($job_dir);
+  $valid = $valid && is_executable($ssh_keygen);
+  return $valid;
+}
+

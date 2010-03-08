@@ -1,0 +1,20 @@
+<?php
+
+include_once('sshaccessusers.features.inc');
+
+/**
+ * Implementation of hook_sshaccess_authorized_keys().
+ */
+function sshaccessusers_sshaccess_authorized_keys($node) {
+  $result = array();
+
+  foreach ($node->field_access_users as $user) {
+    $keys = sshkey_user_public_keys_list($user['uid']);
+    foreach ($keys as $key) {
+      $pubkey = sshkey_get_public_key_data($key['fingerprint']);
+      $result[$pubkey['fingerprint']] = $pubkey['pubkey'];
+    }
+  }
+
+  return $result;
+}
