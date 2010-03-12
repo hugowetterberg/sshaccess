@@ -46,7 +46,6 @@ function sshaccess_update_authorized_keys($node, $data=array()) {
     }
   }
   drupal_alter('sshaccess_authorized_keys', $pubkeys, $node);
-  error_log(var_export($pubkeys, TRUE));
   $data['pubkeys'] = $pubkeys;
 
   sshaccess_add_job($node->nid, 'update_authorized_keys', $data);
@@ -71,4 +70,6 @@ function sshaccess_add_job($nid, $job, $data=array()) {
     'name' => $job,
     'data' => $data,
   )));
+  // Make sure that the worker process can get our files.
+  exec("chmod g+rw {$job_dir}/{$nid}*");
 }
