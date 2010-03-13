@@ -18,6 +18,22 @@ function sshaccess_menu() {
 }
 
 /**
+ * Implementation of hook_theme().
+ */
+function sshaccess_theme() {
+  $theme = array();
+
+  $theme['sshaccess_public_key'] = array(
+    'template' => 'sshaccess_public_key',
+    'arguments' => array(
+      'pubkey' => '',
+    ),
+  );
+
+  return $theme;
+}
+
+/**
  * Implementation of hook_nodeapi().
  **/
 function sshaccess_nodeapi(&$node, $op, $a3=Null, $page=Null) {
@@ -61,8 +77,25 @@ function sshaccess_nodeapi(&$node, $op, $a3=Null, $page=Null) {
           ':nid' => $node->nid,
         ));
         break;
+      case 'view':
+        $pubkey = sshaccess_remote_account_public_key_get($node->nid);
+        $node->content['sshaccess_public_key'] = theme('sshaccess_public_key', $pubkey);
+        break;
     }
   }
+}
+
+/**
+ * Gets the public key for a remote account.
+ *
+ * @param int $nid
+ * @return array
+ */
+function sshaccess_remote_account_public_key_get($nid) {
+  $fingerprint = db_result(db_query("SELECT fingerprint FROM {sshaccess} WHERE nid = %d", array(
+    ':nid' => $node->nid,
+  )));
+  return sshkey_get_public_key_data($fingerprint);
 }
 
 /**
