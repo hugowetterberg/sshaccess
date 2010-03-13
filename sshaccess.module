@@ -96,7 +96,7 @@ function sshaccess_nodeapi(&$node, $op, $a3=Null, $page=Null) {
  */
 function sshaccess_remote_account_public_key_get($nid) {
   $fingerprint = db_result(db_query("SELECT fingerprint FROM {sshaccess} WHERE nid = %d", array(
-    ':nid' => $node->nid,
+    ':nid' => $nid,
   )));
   return sshkey_get_public_key_data($fingerprint);
 }
