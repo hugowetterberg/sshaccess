@@ -7,9 +7,13 @@ function job_add_keys($job, $job_dir, $key_store) {
   $success = FALSE;
 
   if (file_exists($from)) {
-    $success = rename($from, $to);
-    $success = $success && rename("{$from}.pub", "{$to}.pub");
+    $success = copy($from, $to);
+    $success = chmod($to, 0600);
+    $success = $success && copy("{$from}.pub", "{$to}.pub");
+
     if ($success) {
+      unlink($from);
+      unlink("{$from}.pub");
       file_put_contents($info, sprintf("User: %s\nHost: %s\n", $job['data']['user'], $job['data']['host']));
     }
   }
