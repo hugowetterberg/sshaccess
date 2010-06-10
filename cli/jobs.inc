@@ -8,6 +8,7 @@ function job_add_keys($job, $job_dir, $key_store) {
 
   if (file_exists($from)) {
     $success = copy($from, $to);
+    $success = chmod($to, 0600);
     $success = $success && copy("{$from}.pub", "{$to}.pub");
 
     if ($success) {
